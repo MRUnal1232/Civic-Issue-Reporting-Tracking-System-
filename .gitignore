@@ -1,0 +1,88 @@
+# --- Node / Monorepo ---
+node_modules/
+**/node_modules/
+
+# Dependency logs/cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Build outputs
+build/
+dist/
+**/build/
+**/dist/
+.tmp/
+.temp/
+.cache/
+**/.cache/
+
+# Coverage / test
+coverage/
+.nyc_output/
+.jest-cache/
+.jest/
+
+# Env & secrets (keep examples)
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+backend/.env.*
+frontend/.env.*
+!backend/env.example
+!frontend/env.example
+
+# Logs
+logs/
+**/logs/
+*.log
+*.log.*
+log.txt
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*.orig
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Local databases / dumps
+dump/
+*.sqlite
+*.sqlite3
+
+# Images cache / uploads (runtime only)
+uploads/
+**/uploads/
+
+# Frontend specific
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.eslintcache
+
+# Backend specific
+backend/.cache/
+
+# Misc
+*.tsbuildinfo
+.eslintcache
+
+backend/node_modules/
+frontend/node_modules/
+
+frontend/.node_modules/
+backend/.node_modules/
