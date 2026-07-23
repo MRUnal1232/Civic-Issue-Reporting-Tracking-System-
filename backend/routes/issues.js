@@ -4,7 +4,6 @@ const Issue = require('../models/Issue');
 const User = require('../models/User');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { upload, handleUploadError } = require('../middleware/upload');
-const issueClassifier = require('../utils/mlClassifier');
 
 const router = express.Router();
 
@@ -13,15 +12,15 @@ const router = express.Router();
 // @access  Public (with optional auth for user-specific data)
 router.get('/', [
   optionalAuth,
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
-  query('status').optional().isIn(['Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed', 'Rejected']),
-  query('category').optional().isString(),
-  query('priority').optional().isIn(['Low', 'Medium', 'High', 'Critical']),
-  query('sortBy').optional().isIn(['createdAt', 'upvoteCount', 'priority', 'status']),
-  query('sortOrder').optional().isIn(['asc', 'desc']),
-  query('search').optional().isString(),
-  query('nearby').optional().isString().withMessage('Nearby must be in format "lat,lng,radius"')
+  query('page').optional({ checkFalsy: true, nullable: true }).isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional({ checkFalsy: true, nullable: true }).isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
+  query('status').optional({ checkFalsy: true, nullable: true }).isIn(['Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed', 'Rejected']),
+  query('category').optional({ checkFalsy: true, nullable: true }).isString(),
+  query('priority').optional({ checkFalsy: true, nullable: true }).isIn(['Low', 'Medium', 'High', 'Critical']),
+  query('sortBy').optional({ checkFalsy: true, nullable: true }).isIn(['createdAt', 'upvoteCount', 'priority', 'status']),
+  query('sortOrder').optional({ checkFalsy: true, nullable: true }).isIn(['asc', 'desc']),
+  query('search').optional({ checkFalsy: true, nullable: true }).isString(),
+  query('nearby').optional({ checkFalsy: true, nullable: true }).isString().withMessage('Nearby must be in format "lat,lng,radius"')
 ], async (req, res) => {
   try {
     // Check validation errors
@@ -159,6 +158,18 @@ router.get('/:id', [optionalAuth], async (req, res) => {
 router.post('/', [
   authenticateToken,
   upload.array('images', 5),
+  // Multipart/form-data can only carry string values, so a nested array like
+  // location.coordinates arrives JSON-stringified. Parse it back before validation.
+  (req, res, next) => {
+    if (req.body.location && typeof req.body.location.coordinates === 'string') {
+      try {
+        req.body.location.coordinates = JSON.parse(req.body.location.coordinates);
+      } catch (e) {
+        // Leave as-is; the isArray validator below will reject it with a clear message.
+      }
+    }
+    next();
+  },
   body('title')
     .trim()
     .isLength({ min: 5, max: 100 })
@@ -591,88 +602,6 @@ router.get('/user/:userId', [
   }
 });
 
-// @route   POST /api/issues/classify
-// @desc    Classify issue category using ML
-// @access  Private
-router.post('/classify', [
-  authenticateToken,
-  upload.single('image'),
-  body('description')
-    .optional()
-    .isString()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('Description must be between 10 and 1000 characters')
-], handleUploadError, async (req, res) => {
-  try {
-    // Check validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const { description = '' } = req.body;
-    const imageBuffer = req.file ? req.file.buffer : null;
-
-    if (!imageBuffer && !description) {
-      return res.status(400).json({
-        message: 'Either image or description is required for classification'
-      });
-    }
-
-    // Classify the issue
-    const classification = await issueClassifier.classifyIssue(imageBuffer, description);
-
-    res.json({
-      message: 'Issue classified successfully',
-      classification
-    });
-  } catch (error) {
-    console.error('Classify issue error:', error);
-    res.status(500).json({
-      message: 'Failed to classify issue',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
-  }
-});
-
-// @route   POST /api/issues/suggest-category
-// @desc    Get category suggestions based on description
-// @access  Public
-router.post('/suggest-category', [
-  body('description')
-    .isString()
-    .isLength({ min: 10, max: 1000 })
-    .withMessage('Description must be between 10 and 1000 characters')
-], async (req, res) => {
-  try {
-    // Check validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const { description } = req.body;
-
-    // Get category suggestions
-    const suggestions = await issueClassifier.getCategorySuggestions(description);
-
-    res.json({
-      message: 'Category suggestions generated successfully',
-      suggestions
-    });
-  } catch (error) {
-    console.error('Suggest category error:', error);
-    res.status(500).json({
-      message: 'Failed to generate category suggestions',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
-  }
-});
+// ML-based classify and suggest-category routes temporarily removed
 
 module.exports = router;

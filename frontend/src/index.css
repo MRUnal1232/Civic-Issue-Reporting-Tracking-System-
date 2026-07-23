@@ -198,6 +198,38 @@ code {
   }
 }
 
+/* Hero Section Scroll Animation */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Apply animation to all text elements in hero */
+.hero h1,
+.hero h2,
+.hero h3,
+.hero h4,
+.hero h5,
+.hero h6,
+.hero p,
+.hero span,
+.hero div {
+  transition: color 0.3s ease-in-out;
+  will-change: color;
+}
+
+.hero .scroll-animated {
+  color: #ffffff !important; /* Initial white color */
+}
+
+.hero .scroll-animated.animate-to-blue {
+  color: #1976d2 !important; /* Blue when scrolled */
+}
+
+.hero .scroll-animated.animate-to-white {
+  color: #ffffff !important; /* White when at top */
+}
+
 /* Utility classes */
 .text-center {
   text-align: center;

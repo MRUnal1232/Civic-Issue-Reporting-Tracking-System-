@@ -92,9 +92,9 @@ const IssuesList = () => {
     setPage(1);
   };
 
-  const handleUpvote = async (issueId) => {
+  const handleUpvote = async (issueId, hasUpvoted) => {
     try {
-      if (issue.hasUpvoted) {
+      if (hasUpvoted) {
         await issuesEndpoints.removeUpvote(issueId);
       } else {
         await issuesEndpoints.upvoteIssue(issueId);
@@ -361,9 +361,9 @@ const IssuesList = () => {
                         startIcon={<ThumbUp />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleUpvote(issue._id);
+                          handleUpvote(issue._id, issue.hasUpvoted);
                         }}
-                        color={issue.hasUpvoted ? 'primary' : 'default'}
+                        color={issue.hasUpvoted ? 'primary' : 'inherit'}
                       >
                         {issue.upvoteCount || 0}
                       </Button>

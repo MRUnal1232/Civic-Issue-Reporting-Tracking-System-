@@ -1,0 +1,51 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2"/>
+  
+  <!-- Main icon - Community/People connected -->
+  <g transform="translate(100, 100)">
+    <!-- Central community circle -->
+    <circle cx="0" cy="0" r="25" fill="#4a90e2" opacity="0.1"/>
+    
+    <!-- People silhouettes -->
+    <g fill="#4a90e2">
+      <!-- Person 1 (center) -->
+      <circle cx="0" cy="-8" r="6"/>
+      <path d="M-8,8 Q0,2 8,8 L8,20 Q0,16 -8,20 Z"/>
+      
+      <!-- Person 2 (left) -->
+      <circle cx="-20" cy="-5" r="5"/>
+      <path d="M-28,5 Q-20,0 -12,5 L-12,18 Q-20,14 -28,18 Z"/>
+      
+      <!-- Person 3 (right) -->
+      <circle cx="20" cy="-5" r="5"/>
+      <path d="M12,5 Q20,0 28,5 L28,18 Q20,14 12,18 Z"/>
+      
+      <!-- Person 4 (top) -->
+      <circle cx="0" cy="-25" r="5"/>
+      <path d="M-8,-15 Q0,-20 8,-15 L8,-3 Q0,-7 -8,-3 Z"/>
+    </g>
+    
+    <!-- Connection lines -->
+    <g stroke="#4a90e2" stroke-width="2" fill="none" opacity="0.6">
+      <line x1="0" y1="-8" x2="-20" y2="-5"/>
+      <line x1="0" y1="-8" x2="20" y2="-5"/>
+      <line x1="0" y1="-8" x2="0" y2="-25"/>
+    </g>
+    
+    <!-- Issue indicators (small dots) -->
+    <g fill="#e74c3c">
+      <circle cx="-15" cy="15" r="2"/>
+      <circle cx="15" cy="15" r="2"/>
+      <circle cx="0" cy="30" r="2"/>
+    </g>
+  </g>
+  
+  <!-- Text -->
+  <text x="100" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2c3e50">
+    Social Problem
+  </text>
+  <text x="100" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#7f8c8d">
+    Civic Issue Tracker
+  </text>
+</svg>

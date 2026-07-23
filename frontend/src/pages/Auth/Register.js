@@ -45,7 +45,15 @@ const Register = () => {
     setIsLoading(true);
     setError('');
 
-    const result = await registerUser(data);
+    // Only send fields expected by backend
+    const payload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      phone: data.phone || undefined,
+    };
+
+    const result = await registerUser(payload);
     
     if (result.success) {
       navigate('/dashboard');
@@ -139,7 +147,7 @@ const Register = () => {
                   autoComplete="tel"
                   {...register('phone', {
                     pattern: {
-                      value: /^[\+]?[1-9][\d]{0,15}$/,
+                      value: /^[+]?[1-9][\d]{0,15}$/,
                       message: 'Invalid phone number',
                     },
                   })}

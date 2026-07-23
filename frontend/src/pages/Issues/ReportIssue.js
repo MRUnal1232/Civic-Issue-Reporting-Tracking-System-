@@ -22,15 +22,15 @@ import {
 import {
   LocationOn,
   PhotoCamera,
-  Description,
-  Category,
   Send,
+  MyLocation,
 } from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from 'react-query';
 import { issuesEndpoints } from '../../services/api';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import { getCurrentAddress } from '../../utils/geolocation';
 import toast from 'react-hot-toast';
 
 const ReportIssue = () => {
@@ -38,6 +38,7 @@ const ReportIssue = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedImages, setSelectedImages] = useState([]);
   const [location, setLocation] = useState(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   const {
     register,
@@ -99,6 +100,34 @@ const ReportIssue = () => {
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleGetCurrentLocation = async () => {
+    setIsGettingLocation(true);
+    try {
+      const result = await getCurrentAddress();
+
+      // Coordinates variable stored locally for any further use
+      const currentCoordinates = {
+        latitude: result.coordinates.lat,
+        longitude: result.coordinates.lng,
+      };
+
+      // Update/replace the address field value via react-hook-form
+      setValue('location.address', result.address, { shouldValidate: true, shouldDirty: true });
+
+      // Persist location in component state (address + [lng, lat])
+      setLocation({
+        address: result.address,
+        coordinates: [currentCoordinates.longitude, currentCoordinates.latitude],
+      });
+
+      toast.success('Location detected successfully!');
+    } catch (error) {
+      toast.error(`Failed to get location: ${error.message}`);
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
+
   const onSubmit = (data) => {
     const formData = new FormData();
     
@@ -148,6 +177,7 @@ const ReportIssue = () => {
                 <Select
                   {...register('category', { required: 'Category is required' })}
                   label="Category"
+                  defaultValue=""
                 >
                   {categories.map((category) => (
                     <MenuItem key={category} value={category}>
@@ -196,25 +226,12 @@ const ReportIssue = () => {
             />
             <Button
               variant="outlined"
+              startIcon={<MyLocation />}
               sx={{ mt: 2 }}
-              onClick={() => {
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                      setLocation({
-                        address: 'Current Location',
-                        coordinates: [position.coords.longitude, position.coords.latitude],
-                      });
-                      toast.success('Location detected successfully!');
-                    },
-                    (error) => {
-                      toast.error('Unable to detect location. Please enter manually.');
-                    }
-                  );
-                }
-              }}
+              onClick={handleGetCurrentLocation}
+              disabled={isGettingLocation}
             >
-              Use Current Location
+              {isGettingLocation ? 'Getting Location...' : 'Use Current Location'}
             </Button>
           </Box>
         );
@@ -358,9 +375,9 @@ const ReportIssue = () => {
                     variant="contained"
                     onClick={handleNext}
                     disabled={
-                      activeStep === 0 && (!watch('title') || !watch('category') || !watch('priority')) ||
-                      activeStep === 1 && !watch('location.address') ||
-                      activeStep === 2 && !watch('description')
+                      (activeStep === 0 && (!watch('title') || !watch('category') || !watch('priority'))) ||
+                      (activeStep === 1 && !watch('location.address')) ||
+                      (activeStep === 2 && !watch('description'))
                     }
                   >
                     Next

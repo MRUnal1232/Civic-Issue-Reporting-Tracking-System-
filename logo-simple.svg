@@ -1,0 +1,34 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <circle cx="50" cy="50" r="45" fill="#4a90e2" opacity="0.1"/>
+  
+  <!-- Main icon - Community -->
+  <g transform="translate(50, 50)">
+    <!-- People silhouettes -->
+    <g fill="#4a90e2">
+      <!-- Person 1 (center) -->
+      <circle cx="0" cy="-6" r="4"/>
+      <path d="M-6,6 Q0,2 6,6 L6,15 Q0,12 -6,15 Z"/>
+      
+      <!-- Person 2 (left) -->
+      <circle cx="-12" cy="-3" r="3"/>
+      <path d="M-18,3 Q-12,0 -6,3 L-6,12 Q-12,9 -18,12 Z"/>
+      
+      <!-- Person 3 (right) -->
+      <circle cx="12" cy="-3" r="3"/>
+      <path d="M6,3 Q12,0 18,3 L18,12 Q12,9 6,12 Z"/>
+    </g>
+    
+    <!-- Connection lines -->
+    <g stroke="#4a90e2" stroke-width="1.5" fill="none" opacity="0.7">
+      <line x1="0" y1="-6" x2="-12" y2="-3"/>
+      <line x1="0" y1="-6" x2="12" y2="-3"/>
+    </g>
+    
+    <!-- Issue indicators -->
+    <g fill="#e74c3c">
+      <circle cx="-8" cy="10" r="1.5"/>
+      <circle cx="8" cy="10" r="1.5"/>
+    </g>
+  </g>
+</svg>

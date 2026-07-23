@@ -23,12 +23,14 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { heroRef } = useScrollAnimation();
 
   const features = [
     {
@@ -74,6 +76,8 @@ const Home = () => {
     <Box>
       {/* Hero Section */}
       <Box
+        ref={heroRef}
+        className="hero"
         sx={{
           background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
           color: 'white',
@@ -85,20 +89,43 @@ const Home = () => {
           <Typography
             variant={isMobile ? 'h3' : 'h2'}
             component="h1"
+            className="scroll-animated"
             gutterBottom
             fontWeight="bold"
+            sx={{
+              color: '#ffffff', // Initial white color
+              transition: 'color 0.3s ease-in-out',
+            }}
           >
             Make Your Community Better
           </Typography>
           <Typography
             variant={isMobile ? 'h6' : 'h5'}
+            component="p"
+            className="scroll-animated"
             paragraph
-            sx={{ maxWidth: '600px', mx: 'auto', mb: 4 }}
+            sx={{ 
+              maxWidth: '600px', 
+              mx: 'auto', 
+              mb: 4,
+              color: '#ffffff', // Initial white color
+              transition: 'color 0.3s ease-in-out',
+            }}
           >
             Report civic issues, track their progress, and work together with your
             community to create positive change.
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Box 
+            className="scroll-animated"
+            sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              justifyContent: 'center', 
+              flexWrap: 'wrap',
+              color: '#ffffff', // Initial white color
+              transition: 'color 0.3s ease-in-out',
+            }}
+          >
             <Button
               variant="contained"
               size="large"

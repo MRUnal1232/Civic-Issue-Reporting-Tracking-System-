@@ -84,8 +84,6 @@ export const issuesEndpoints = {
   removeUpvote: (id) => issuesAPI.delete(`/issues/${id}/upvote`),
   addComment: (id, comment) => issuesAPI.post(`/issues/${id}/comments`, comment),
   getUserIssues: (userId, params) => issuesAPI.get(`/issues/user/${userId}`, { params }),
-  classifyIssue: (formData) => issuesAPI.post('/issues/classify', formData),
-  suggestCategory: (description) => issuesAPI.post('/issues/suggest-category', { description }),
 };
 
 // Admin API endpoints
@@ -157,7 +155,7 @@ export const handleAPIError = (error) => {
   }
 };
 
-export default {
+const api = {
   authAPI,
   issuesAPI,
   adminAPI,
@@ -169,3 +167,5 @@ export default {
   uploadFile,
   handleAPIError,
 };
+
+export default api;

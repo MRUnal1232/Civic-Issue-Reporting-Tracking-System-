@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('combined'));
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/civic-issues', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/Social_Problem', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
