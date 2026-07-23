@@ -2,33 +2,25 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-// Create axios instances for different purposes
+// Create axios instances for different purposes.
+// Content-Type is intentionally left for axios to set per-request: it defaults to
+// application/json for plain objects, and to multipart/form-data (with the correct
+// boundary) for FormData payloads like image uploads. A hardcoded 'application/json'
+// default here would make axios silently JSON-serialize FormData bodies, dropping files.
 export const authAPI = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 export const issuesAPI = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 export const adminAPI = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 export const usersAPI = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Request interceptor to add auth token
