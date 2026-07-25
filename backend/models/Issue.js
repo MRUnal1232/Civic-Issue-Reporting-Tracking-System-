@@ -34,6 +34,12 @@ const issueSchema = new mongoose.Schema({
     enum: ['Low', 'Medium', 'High', 'Critical'],
     default: 'Medium'
   },
+  aiSuggestion: {
+    category: String,
+    priority: String,
+    confidence: Number,
+    matchedKeywords: [String]
+  },
   status: {
     type: String,
     enum: ['Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed', 'Rejected'],

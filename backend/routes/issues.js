@@ -4,6 +4,7 @@ const Issue = require('../models/Issue');
 const User = require('../models/User');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { upload, handleUploadError } = require('../middleware/upload');
+const classifierClient = require('../utils/classifierClient');
 
 const router = express.Router();
 
@@ -246,12 +247,17 @@ router.post('/', [
       }
     }
 
+    // Get an auto-suggested category/priority from the Java classifier microservice.
+    // Purely advisory: never blocks or fails issue creation if the service is unavailable.
+    const aiSuggestion = await classifierClient.getSuggestion(title, description);
+
     // Create new issue
     const issue = new Issue({
       title,
       description,
       category,
       priority,
+      aiSuggestion,
       reporter: req.user._id,
       location: {
         address: location.address,

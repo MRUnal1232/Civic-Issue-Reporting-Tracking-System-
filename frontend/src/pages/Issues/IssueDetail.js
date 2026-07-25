@@ -349,6 +349,24 @@ const IssueDetail = () => {
                   <Chip label={issue.category} variant="outlined" />
                 </Box>
 
+                {isAdmin && issue.aiSuggestion?.category && (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      AI Suggested Category
+                    </Typography>
+                    <Chip
+                      label={`${issue.aiSuggestion.category} (${issue.aiSuggestion.priority})`}
+                      size="small"
+                      color={issue.aiSuggestion.category === issue.category ? 'success' : 'warning'}
+                      variant="outlined"
+                    />
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                      From the Java classification service
+                      {issue.aiSuggestion.category !== issue.category && ' — differs from reporter\'s choice'}
+                    </Typography>
+                  </Box>
+                )}
+
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary">
                     Reported
