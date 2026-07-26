@@ -41,7 +41,7 @@ import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import StatusBadge from '../../components/Common/StatusBadge';
 import PriorityBadge from '../../components/Common/PriorityBadge';
 
-const IssuesList = () => {
+const IssuesList = ({ showUserFilter = false }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -53,16 +53,21 @@ const IssuesList = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
 
+  // The backend returns the logged-in user's id as `id` right after login/register,
+  // but as `_id` when re-fetched from /auth/profile (e.g. after a page reload).
+  const userId = user?.id || user?._id;
+
+  // The "my issues" endpoint only supports pagination, not the search/category/
+  // status/priority filters below, since it's always scoped to the current user.
   const { data: issuesData, isLoading, refetch } = useQuery(
-    ['issues', page, filters],
-    () => issuesEndpoints.getIssues({
-      page,
-      limit: 12,
-      ...filters,
-    }),
+    showUserFilter ? ['issues', 'mine', userId, page] : ['issues', page, filters],
+    () => showUserFilter
+      ? issuesEndpoints.getUserIssues(userId, { page, limit: 12 })
+      : issuesEndpoints.getIssues({ page, limit: 12, ...filters }),
     {
       select: (response) => response.data,
       keepPreviousData: true,
+      enabled: !showUserFilter || !!userId,
     }
   );
 
@@ -135,130 +140,134 @@ const IssuesList = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" fontWeight="bold">
-          Community Issues
-        </Typography>
-        {user && (
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => navigate('/report')}
-          >
-            Report Issue
-          </Button>
-        )}
-      </Box>
+      {!showUserFilter && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography variant="h4" fontWeight="bold">
+            Community Issues
+          </Typography>
+          {user && (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => navigate('/report')}
+            >
+              Report Issue
+            </Button>
+          )}
+        </Box>
+      )}
 
       {/* Search and Filters */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                placeholder="Search issues..."
-                value={filters.search}
-                onChange={(e) => handleSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                  endAdornment: filters.search && (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleSearch('')}
-                      >
-                        <Clear />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<FilterList />}
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  Filters
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={clearFilters}
-                  disabled={Object.values(filters).every(v => !v)}
-                >
-                  Clear
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-
-          {/* Filter Options */}
-          {showFilters && (
-            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
-                      label="Status"
-                    >
-                      <MenuItem value="">All Statuses</MenuItem>
-                      {statuses.map((status) => (
-                        <MenuItem key={status} value={status}>
-                          {status}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                      value={filters.category}
-                      onChange={(e) => handleFilterChange('category', e.target.value)}
-                      label="Category"
-                    >
-                      <MenuItem value="">All Categories</MenuItem>
-                      {categories.map((category) => (
-                        <MenuItem key={category} value={category}>
-                          {category}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Priority</InputLabel>
-                    <Select
-                      value={filters.priority}
-                      onChange={(e) => handleFilterChange('priority', e.target.value)}
-                      label="Priority"
-                    >
-                      <MenuItem value="">All Priorities</MenuItem>
-                      {priorities.map((priority) => (
-                        <MenuItem key={priority} value={priority}>
-                          {priority}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+      {!showUserFilter && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  placeholder="Search issues..."
+                  value={filters.search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                    endAdornment: filters.search && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleSearch('')}
+                        >
+                          <Clear />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Grid>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterList />}
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    Filters
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={clearFilters}
+                    disabled={Object.values(filters).every(v => !v)}
+                  >
+                    Clear
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+
+            {/* Filter Options */}
+            {showFilters && (
+              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        value={filters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                        label="Status"
+                      >
+                        <MenuItem value="">All Statuses</MenuItem>
+                        {statuses.map((status) => (
+                          <MenuItem key={status} value={status}>
+                            {status}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Category</InputLabel>
+                      <Select
+                        value={filters.category}
+                        onChange={(e) => handleFilterChange('category', e.target.value)}
+                        label="Category"
+                      >
+                        <MenuItem value="">All Categories</MenuItem>
+                        {categories.map((category) => (
+                          <MenuItem key={category} value={category}>
+                            {category}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Priority</InputLabel>
+                      <Select
+                        value={filters.priority}
+                        onChange={(e) => handleFilterChange('priority', e.target.value)}
+                        label="Priority"
+                      >
+                        <MenuItem value="">All Priorities</MenuItem>
+                        {priorities.map((priority) => (
+                          <MenuItem key={priority} value={priority}>
+                            {priority}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Issues Grid */}
       {issuesData?.issues?.length > 0 ? (
@@ -413,9 +422,11 @@ const IssuesList = () => {
             No issues found
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
-            {Object.values(filters).some(v => v) 
-              ? 'Try adjusting your filters to see more results.'
-              : 'Be the first to report a civic issue in your area.'
+            {showUserFilter
+              ? "You haven't reported any issues yet."
+              : Object.values(filters).some(v => v)
+                ? 'Try adjusting your filters to see more results.'
+                : 'Be the first to report a civic issue in your area.'
             }
           </Typography>
           {user && (
