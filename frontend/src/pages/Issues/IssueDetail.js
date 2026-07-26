@@ -20,6 +20,10 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   LocationOn,
@@ -28,9 +32,6 @@ import {
   Share,
   Edit,
   Delete,
-  Reply,
-  Person,
-  Schedule,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -41,6 +42,21 @@ import StatusBadge from '../../components/Common/StatusBadge';
 import PriorityBadge from '../../components/Common/PriorityBadge';
 import toast from 'react-hot-toast';
 
+const CATEGORIES = [
+  'Roads & Infrastructure',
+  'Water & Sanitation',
+  'Electricity',
+  'Waste Management',
+  'Public Safety',
+  'Environment',
+  'Healthcare',
+  'Education',
+  'Transportation',
+  'Other',
+];
+
+const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
+
 const IssueDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -48,6 +64,9 @@ const IssueDetail = () => {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
   const [showCommentDialog, setShowCommentDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState(null);
 
   const { data: issue, isLoading } = useQuery(
     ['issue', id],
@@ -98,6 +117,34 @@ const IssueDetail = () => {
     }
   );
 
+  const updateMutation = useMutation(
+    (data) => issuesEndpoints.updateIssue(id, data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['issue', id]);
+        setIsEditing(false);
+        toast.success('Issue updated successfully!');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to update issue');
+      },
+    }
+  );
+
+  const deleteMutation = useMutation(
+    () => issuesEndpoints.deleteIssue(id),
+    {
+      onSuccess: () => {
+        toast.success('Issue deleted successfully');
+        navigate('/issues');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to delete issue');
+        setShowDeleteDialog(false);
+      },
+    }
+  );
+
   const handleUpvote = () => {
     if (issue.hasUpvoted) {
       removeUpvoteMutation.mutate();
@@ -113,12 +160,26 @@ const IssueDetail = () => {
   };
 
   const handleEdit = () => {
-    navigate(`/issues/${id}/edit`);
+    setEditForm({
+      title: issue.title,
+      description: issue.description,
+      category: issue.category,
+      priority: issue.priority,
+    });
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditForm(null);
+  };
+
+  const handleSaveEdit = () => {
+    updateMutation.mutate(editForm);
   };
 
   const handleDelete = () => {
-    // Implement delete functionality
-    console.log('Delete issue');
+    deleteMutation.mutate();
   };
 
   if (isLoading) {
@@ -135,7 +196,9 @@ const IssueDetail = () => {
     );
   }
 
-  const canEdit = user && (user.id === issue.reporter._id || isAdmin);
+  const userId = user?.id || user?._id;
+  const canEdit = user && (userId === issue.reporter._id || isAdmin);
+  const isLocked = ['Resolved', 'Closed'].includes(issue.status);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -145,15 +208,27 @@ const IssueDetail = () => {
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="h4" fontWeight="bold">
-                  {issue.title}
-                </Typography>
-                {canEdit && (
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    label="Title"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
+                    sx={{ mr: 2 }}
+                  />
+                ) : (
+                  <Typography variant="h4" fontWeight="bold">
+                    {issue.title}
+                  </Typography>
+                )}
+                {canEdit && !isEditing && (
+                  <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
                     <Button
                       size="small"
                       startIcon={<Edit />}
                       onClick={handleEdit}
+                      disabled={isLocked}
+                      title={isLocked ? 'Resolved or closed issues cannot be edited' : undefined}
                     >
                       Edit
                     </Button>
@@ -161,22 +236,68 @@ const IssueDetail = () => {
                       size="small"
                       color="error"
                       startIcon={<Delete />}
-                      onClick={handleDelete}
+                      onClick={() => setShowDeleteDialog(true)}
                     >
                       Delete
                     </Button>
                   </Box>
                 )}
+                {isEditing && (
+                  <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+                    <Button size="small" onClick={handleCancelEdit} disabled={updateMutation.isLoading}>
+                      Cancel
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={handleSaveEdit}
+                      disabled={updateMutation.isLoading || !editForm.title.trim() || !editForm.description.trim()}
+                    >
+                      {updateMutation.isLoading ? 'Saving...' : 'Save'}
+                    </Button>
+                  </Box>
+                )}
               </Box>
 
-              <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                 <StatusBadge status={issue.status} />
-                <PriorityBadge priority={issue.priority} />
-                <Chip
-                  label={issue.category}
-                  variant="outlined"
-                  color="primary"
-                />
+                {isEditing ? (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                      <InputLabel>Priority</InputLabel>
+                      <Select
+                        label="Priority"
+                        value={editForm.priority}
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, priority: e.target.value }))}
+                      >
+                        {PRIORITIES.map((p) => (
+                          <MenuItem key={p} value={p}>{p}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                      <InputLabel>Category</InputLabel>
+                      <Select
+                        label="Category"
+                        value={editForm.category}
+                        onChange={(e) => setEditForm((prev) => ({ ...prev, category: e.target.value }))}
+                      >
+                        {CATEGORIES.map((c) => (
+                          <MenuItem key={c} value={c}>{c}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </>
+                ) : (
+                  <>
+                    <PriorityBadge priority={issue.priority} />
+                    <Chip
+                      label={issue.category}
+                      variant="outlined"
+                      color="primary"
+                    />
+                  </>
+                )}
                 {issue.isUrgent && (
                   <Chip
                     label="Urgent"
@@ -186,9 +307,21 @@ const IssueDetail = () => {
                 )}
               </Box>
 
-              <Typography variant="body1" paragraph sx={{ mb: 3 }}>
-                {issue.description}
-              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  label="Description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                  sx={{ mb: 3 }}
+                />
+              ) : (
+                <Typography variant="body1" paragraph sx={{ mb: 3 }}>
+                  {issue.description}
+                </Typography>
+              )}
 
               {/* Images */}
               {issue.images && issue.images.length > 0 && (
@@ -444,6 +577,34 @@ const IssueDetail = () => {
             disabled={!commentText.trim() || addCommentMutation.isLoading}
           >
             {addCommentMutation.isLoading ? 'Adding...' : 'Add Comment'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete Issue</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete "{issue.title}"? This cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDeleteDialog(false)} disabled={deleteMutation.isLoading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDelete}
+            color="error"
+            variant="contained"
+            disabled={deleteMutation.isLoading}
+          >
+            {deleteMutation.isLoading ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
