@@ -46,7 +46,14 @@ const ReportIssue = () => {
     formState: { errors },
     watch,
     setValue,
+    trigger,
   } = useForm();
+
+  const stepFields = [
+    ['title', 'category', 'priority'],
+    ['location.address'],
+    ['description'],
+  ];
 
   const reportMutation = useMutation(
     (data) => issuesEndpoints.createIssue(data),
@@ -83,8 +90,12 @@ const ReportIssue = () => {
 
   const priorities = ['Low', 'Medium', 'High', 'Critical'];
 
-  const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
+  const handleNext = async () => {
+    const fieldsToValidate = stepFields[activeStep];
+    const isValid = fieldsToValidate ? await trigger(fieldsToValidate) : true;
+    if (isValid) {
+      setActiveStep((prevStep) => prevStep + 1);
+    }
   };
 
   const handleBack = () => {
