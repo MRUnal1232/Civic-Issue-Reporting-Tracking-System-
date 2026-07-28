@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: civic-tracker-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: JAVA_CLASSIFIER_URL
+        fromService:
+          type: web
+          name: civic-tracker-classifier
+          property: hostport
+
+  - type: web
+    name: civic-tracker-classifier
+    runtime: docker
+    dockerfilePath: java-service/Dockerfile
+    dockerContext: java-service
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080

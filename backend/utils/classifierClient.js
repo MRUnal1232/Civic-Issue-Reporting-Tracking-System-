@@ -1,4 +1,7 @@
-const CLASSIFIER_URL = process.env.JAVA_CLASSIFIER_URL || 'http://localhost:8080';
+// Render's fromService env var injection gives a bare "host:port" with no scheme
+// (e.g. for internal service-to-service calls), so normalize it here.
+const rawUrl = process.env.JAVA_CLASSIFIER_URL || 'http://localhost:8080';
+const CLASSIFIER_URL = /^https?:\/\//.test(rawUrl) ? rawUrl : `http://${rawUrl}`;
 
 /**
  * Calls the Java classifier microservice for an auto-suggested category/priority.
